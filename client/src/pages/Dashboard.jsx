@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import ProductTable from "@/components/ProductTable";
 import { getProductStatus, getStatusVariant } from "@/lib/utils";
 import Drawer from "@/components/Drawer";
+import Loading from "@/components/Loading";
 
 // GraphQL client simulation
 
@@ -148,6 +149,10 @@ const Dashboard = () => {
       console.error("Error transferring stock:", error);
     }
   };
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
