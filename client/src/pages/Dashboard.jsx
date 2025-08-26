@@ -7,6 +7,8 @@ import { BarChart3 } from "lucide-react";
 import axios from "axios";
 import KpiCard from "@/components/KpiCard";
 import StockDemandChart from "@/components/StockDemandChart";
+import Filters from "@/components/Filters";
+import { Card, CardContent } from "@/components/ui/card";
 
 // GraphQL client simulation
 
@@ -116,8 +118,24 @@ const Dashboard = () => {
             value={`${calculatedKPIs.fillRate}%`}
           />
         </div>
+
         {/* Chart */}
         <StockDemandChart data={kpis} />
+
+        {/* Filters */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <Filters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              selectedWarehouse={selectedWarehouse}
+              setSelectedWarehouse={setSelectedWarehouse}
+              selectedStatus={selectedStatus}
+              setSelectedStatus={setSelectedStatus}
+              warehouses={warehouses}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
