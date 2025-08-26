@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
-
 import Header from "@/components/Header";
-import { Package } from "lucide-react";
-import { TrendingUp } from "lucide-react";
-import { BarChart3 } from "lucide-react";
+import { Package, TrendingUp, BarChart3 } from "lucide-react";
 import axios from "axios";
 import KpiCard from "@/components/KpiCard";
 import StockDemandChart from "@/components/StockDemandChart";
@@ -14,8 +11,7 @@ import { getProductStatus, getStatusVariant } from "@/lib/utils";
 import Drawer from "@/components/Drawer";
 import Loading from "@/components/Loading";
 
-// GraphQL client simulation
-
+// GraphQL fetch function
 const graphqlFetch = async (query, variables = {}) => {
   try {
     const response = await axios.post("http://localhost:8000/graphql", {
@@ -33,7 +29,8 @@ const Dashboard = () => {
   const [products, setProducts] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [kpis, setKpis] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingInitial, setLoadingInitial] = useState(true);
   const [selectedRange, setSelectedRange] = useState("7d");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedWarehouse, setSelectedWarehouse] = useState("all");
@@ -45,47 +42,60 @@ const Dashboard = () => {
   const [transferTo, setTransferTo] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Fetch data
+  // Fetch static data (warehouses + initial KPIs) only once
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    const fetchInitialData = async () => {
+      setLoadingInitial(true);
       try {
-        const [productsData, warehousesData, kpisData] = await Promise.all([
-          graphqlFetch(
-            `
-            query GetProducts($search: String, $status: String, $warehouse: String) {
-              products(search: $search, status: $status, warehouse: $warehouse) {
-                id name sku warehouse stock demand
-              }
-            }
-          `,
-            {
-              search: searchTerm || null,
-              status: selectedStatus === "All" ? null : selectedStatus,
-              warehouse: selectedWarehouse === "all" ? null : selectedWarehouse,
-            }
-          ),
+        const [warehousesData, kpisData] = await Promise.all([
           graphqlFetch("query { warehouses { code name city country } }"),
           graphqlFetch(
             "query GetKPIs($range: String!) { kpis(range: $range) { date stock demand } }",
             { range: selectedRange }
           ),
         ]);
-
-        setProducts(productsData.products || []);
         setWarehouses(warehousesData.warehouses || []);
         setKpis(kpisData.kpis || []);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error(error);
       } finally {
-        setLoading(false);
+        setLoadingInitial(false);
       }
     };
+    fetchInitialData();
+  }, [selectedRange]);
 
-    fetchData();
-  }, [searchTerm, selectedStatus, selectedWarehouse, selectedRange]);
+  // Fetch products when filters/search change with debounce
+  useEffect(() => {
+    const handler = setTimeout(async () => {
+      setLoadingProducts(true);
+      try {
+        const productsData = await graphqlFetch(
+          `
+          query GetProducts($search: String, $status: String, $warehouse: String) {
+            products(search: $search, status: $status, warehouse: $warehouse) {
+              id name sku warehouse stock demand
+            }
+          }
+        `,
+          {
+            search: searchTerm || null,
+            status: selectedStatus === "All" ? null : selectedStatus,
+            warehouse: selectedWarehouse === "all" ? null : selectedWarehouse,
+          }
+        );
+        setProducts(productsData.products || []);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoadingProducts(false);
+      }
+    }, 300); // debounce 300ms
 
-  // Calculate KPIs
+    return () => clearTimeout(handler);
+  }, [searchTerm, selectedStatus, selectedWarehouse]);
+
+  // KPI calculations
   const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
   const totalDemand = products.reduce((sum, p) => sum + p.demand, 0);
   const fillRate =
@@ -99,7 +109,7 @@ const Dashboard = () => {
 
   const calculatedKPIs = { totalStock, totalDemand, fillRate };
 
-  // Handle row click
+  // Row click
   const handleRowClick = (product) => {
     setSelectedProduct(product);
     setUpdateDemandValue(product.demand.toString());
@@ -108,7 +118,7 @@ const Dashboard = () => {
     setDrawerOpen(true);
   };
 
-  // Handle mutations
+  // Mutations
   const handleUpdateDemand = async () => {
     try {
       await graphqlFetch(
@@ -119,11 +129,16 @@ const Dashboard = () => {
       `,
         { id: selectedProduct.id, demand: parseInt(updateDemandValue) }
       );
-
-      // Refresh products
-      window.location.reload(); // Simple refresh for demo
+      // Refresh only products
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === selectedProduct.id
+            ? { ...p, demand: parseInt(updateDemandValue) }
+            : p
+        )
+      );
     } catch (error) {
-      console.error("Error updating demand:", error);
+      console.error(error);
     }
   };
 
@@ -142,21 +157,25 @@ const Dashboard = () => {
           qty: parseInt(transferQty),
         }
       );
-
-      // Refresh products
-      window.location.reload(); // Simple refresh for demo
+      // Update product stock locally
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === selectedProduct.id
+            ? { ...p, stock: p.stock - parseInt(transferQty) }
+            : p
+        )
+      );
     } catch (error) {
-      console.error("Error transferring stock:", error);
+      console.error(error);
     }
   };
 
-  if (loading) {
+  if (loadingInitial) {
     return <Loading />;
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <Header
         title="SupplySight"
         ranges={["7d", "14d", "30d"]}
@@ -165,7 +184,6 @@ const Dashboard = () => {
       />
 
       <div className="container mx-auto px-4 py-6">
-        {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <KpiCard
             title="Total Stock"
@@ -184,10 +202,8 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Chart */}
         <StockDemandChart data={kpis} />
 
-        {/* Filters */}
         <Card className="mb-6">
           <CardContent className="pt-6">
             <Filters
@@ -202,15 +218,18 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Products Table */}
-        <ProductTable
-          products={products}
-          onRowClick={handleRowClick}
-          getProductStatus={getProductStatus}
-          getStatusVariant={getStatusVariant}
-        />
+        {loadingProducts ? (
+          <div className="p-4 text-center">Loading products...</div>
+        ) : (
+          <ProductTable
+            products={products}
+            onRowClick={handleRowClick}
+            getProductStatus={getProductStatus}
+            getStatusVariant={getStatusVariant}
+          />
+        )}
       </div>
-      {/* Product Details Sheet */}
+
       <Drawer
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
