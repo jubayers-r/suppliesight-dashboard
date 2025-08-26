@@ -14,7 +14,7 @@ import Loading from "@/components/Loading";
 // GraphQL fetch function
 const graphqlFetch = async (query, variables = {}) => {
   try {
-    const response = await axios.post("http://localhost:8000/graphql", {
+    const response = await axios.post("https://suppliesight-server-production.up.railway.app/graphql", {
       query,
       variables,
     });
