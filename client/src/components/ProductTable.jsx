@@ -36,8 +36,8 @@ export default function ProductTable({
         <TableHeader>
           <TableRow>
             <TableHead>Product</TableHead>
-            <TableHead>SKU</TableHead>
-            <TableHead>Warehouse</TableHead>
+            <TableHead className="hidden md:table-cell">SKU</TableHead>
+            <TableHead className="hidden md:table-cell">Warehouse</TableHead>
             <TableHead>Stock</TableHead>
             <TableHead>Demand</TableHead>
             <TableHead>Status</TableHead>
@@ -57,8 +57,8 @@ export default function ProductTable({
                 }`}
               >
                 <TableCell className="font-medium">{product.name}</TableCell>
-                <TableCell>{product.sku}</TableCell>
-                <TableCell>{product.warehouse}</TableCell>
+                <TableCell className="hidden md:table-cell">{product.sku}</TableCell>
+                <TableCell className="hidden md:table-cell">{product.warehouse}</TableCell>
                 <TableCell>{product.stock}</TableCell>
                 <TableCell>{product.demand}</TableCell>
                 <TableCell>
