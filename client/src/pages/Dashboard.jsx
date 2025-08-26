@@ -11,6 +11,7 @@ import Filters from "@/components/Filters";
 import { Card, CardContent } from "@/components/ui/card";
 import ProductTable from "@/components/ProductTable";
 import { getProductStatus, getStatusVariant } from "@/lib/utils";
+import Drawer from "@/components/Drawer";
 
 // GraphQL client simulation
 
@@ -106,6 +107,48 @@ const Dashboard = () => {
     setDrawerOpen(true);
   };
 
+  // Handle mutations
+  const handleUpdateDemand = async () => {
+    try {
+      await graphqlFetch(
+        `
+        mutation UpdateDemand($id: ID!, $demand: Int!) {
+          updateDemand(id: $id, demand: $demand) { id demand }
+        }
+      `,
+        { id: selectedProduct.id, demand: parseInt(updateDemandValue) }
+      );
+
+      // Refresh products
+      window.location.reload(); // Simple refresh for demo
+    } catch (error) {
+      console.error("Error updating demand:", error);
+    }
+  };
+
+  const handleTransferStock = async () => {
+    try {
+      await graphqlFetch(
+        `
+        mutation TransferStock($id: ID!, $from: String!, $to: String!, $qty: Int!) {
+          transferStock(id: $id, from: $from, to: $to, qty: $qty) { id stock }
+        }
+      `,
+        {
+          id: selectedProduct.id,
+          from: selectedProduct.warehouse,
+          to: transferTo,
+          qty: parseInt(transferQty),
+        }
+      );
+
+      // Refresh products
+      window.location.reload(); // Simple refresh for demo
+    } catch (error) {
+      console.error("Error transferring stock:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -162,6 +205,23 @@ const Dashboard = () => {
           getStatusVariant={getStatusVariant}
         />
       </div>
+      {/* Product Details Sheet */}
+      <Drawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        selectedProduct={selectedProduct}
+        warehouses={warehouses}
+        updateDemandValue={updateDemandValue}
+        setUpdateDemandValue={setUpdateDemandValue}
+        transferQty={transferQty}
+        setTransferQty={setTransferQty}
+        transferTo={transferTo}
+        setTransferTo={setTransferTo}
+        handleUpdateDemand={handleUpdateDemand}
+        handleTransferStock={handleTransferStock}
+        getProductStatus={getProductStatus}
+        getStatusVariant={getStatusVariant}
+      />
     </div>
   );
 };
