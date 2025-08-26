@@ -1,0 +1,14 @@
+{
+  "name": "suppliesight-dashboard",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n client,server -c cyan,magenta \"pnpm --filter client dev\" \"pnpm --filter server dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
