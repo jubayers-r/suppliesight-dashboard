@@ -9,6 +9,8 @@ import KpiCard from "@/components/KpiCard";
 import StockDemandChart from "@/components/StockDemandChart";
 import Filters from "@/components/Filters";
 import { Card, CardContent } from "@/components/ui/card";
+import ProductTable from "@/components/ProductTable";
+import { getProductStatus, getStatusVariant } from "@/lib/utils";
 
 // GraphQL client simulation
 
@@ -34,6 +36,12 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedWarehouse, setSelectedWarehouse] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("All");
+
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [updateDemandValue, setUpdateDemandValue] = useState("");
+  const [transferQty, setTransferQty] = useState("");
+  const [transferTo, setTransferTo] = useState("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Fetch data
   useEffect(() => {
@@ -89,6 +97,15 @@ const Dashboard = () => {
 
   const calculatedKPIs = { totalStock, totalDemand, fillRate };
 
+  // Handle row click
+  const handleRowClick = (product) => {
+    setSelectedProduct(product);
+    setUpdateDemandValue(product.demand.toString());
+    setTransferQty("");
+    setTransferTo("");
+    setDrawerOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -136,6 +153,14 @@ const Dashboard = () => {
             />
           </CardContent>
         </Card>
+
+        {/* Products Table */}
+        <ProductTable
+          products={products}
+          onRowClick={handleRowClick}
+          getProductStatus={getProductStatus}
+          getStatusVariant={getStatusVariant}
+        />
       </div>
     </div>
   );
