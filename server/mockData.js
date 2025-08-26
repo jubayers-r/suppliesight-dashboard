@@ -17,3 +17,16 @@ export const products = [
 ]
 
 
+export const warehouses = [
+  { code: "BLR-A", name: "Bangalore Alpha", city: "Bangalore", country: "India" },
+  { code: "BLR-B", name: "Bangalore Beta", city: "Bangalore", country: "India" },
+  { code: "BLR-C", name: "Bangalore Gamma", city: "Bangalore", country: "India" },
+  { code: "PNQ-A", name: "Pune Alpha", city: "Pune", country: "India" },
+  { code: "PNQ-B", name: "Pune Beta", city: "Pune", country: "India" },
+  { code: "PNQ-C", name: "Pune Gamma", city: "Pune", country: "India" },
+  { code: "DEL-A", name: "Delhi Alpha", city: "Delhi", country: "India" },
+  { code: "DEL-B", name: "Delhi Beta", city: "Delhi", country: "India" },
+  { code: "DEL-C", name: "Delhi Gamma", city: "Delhi", country: "India" }
+];
+
+
