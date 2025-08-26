@@ -6,6 +6,7 @@ import { TrendingUp } from "lucide-react";
 import { BarChart3 } from "lucide-react";
 import axios from "axios";
 import KpiCard from "@/components/KpiCard";
+import StockDemandChart from "@/components/StockDemandChart";
 
 // GraphQL client simulation
 
@@ -115,6 +116,8 @@ const Dashboard = () => {
             value={`${calculatedKPIs.fillRate}%`}
           />
         </div>
+        {/* Chart */}
+        <StockDemandChart data={kpis} />
       </div>
     </div>
   );
